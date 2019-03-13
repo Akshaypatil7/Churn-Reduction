@@ -273,10 +273,10 @@ desired_precent = 0.6
 ntimes <- ((1 - desired_precent) / desired_precent) * (false_cases / true_cases) - 1
 # Creating synthetic TRUE cases with SMOTE
 names(train)
-str(train_smote$Churn)
-smote_output = SMOTE(X =train[ , -c(1, 2, 3, 14)], target = train$Churn, K = 5, dup_size = ntimes)
-
+str(train)
+smote_output = SMOTE(X =train[ , -c(1, 2, 13)], target = train$Churn, K = 5, dup_size = ntimes)
 train_smote <- smote_output$data
+str(train_smote)
 names(train_smote)[11]<- "Churn" 
 prop.table(table(train_smote$Churn))                                   # now True cases is 0.397% and False is 0.602% 
 
