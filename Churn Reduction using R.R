@@ -80,51 +80,25 @@ numeric_index = vapply(train,is.numeric,logical(1))             # selecting only
 numeric_data = train[,numeric_index]                            
 num_col = names(numeric_data)                                   # names() return colnames in data.frame
 print(length(num_col))
-################## Outlier detection using Boxplot #################
-# outlier analysis works only on numerical variables
-# for (i in 1:length(num_col))
-# {
-#   assign(paste0("gn",i),
-#          ggplot(aes_string(y = (num_col[i]), x = 'Churn'),data = train) +
-#            stat_boxplot(geom = "errorbar", width = 0.5) +
-#            geom_boxplot(outlier.colour="red", fill = "skyblue",
-#                         outlier.shape=18,outlier.size=3, notch=FALSE) +
-#            labs(y=num_col[i],x="Churn")+
-#            ggtitle(paste("Box plot of Churn for",num_col[i])))
-# }
-# ggplot(train, aes(Churn, total.eve.charge)) +
-#   geom_boxplot()
-# 
-# 
-# # Plotting plots together
-# gridExtra::grid.arrange(gn1,gn2,gn3,ncol=3)
-# gridExtra::grid.arrange(gn4,gn5,gn6,ncol=3)
-# gridExtra::grid.arrange(gn7,gn8,gn9,ncol=3)
-# gridExtra::grid.arrange(gn10,gn11,gn12,ncol=3)
-# gridExtra::grid.arrange(gn13,gn14,gn15,ncol=3)
+################# Outlier detection using Boxplot #################
+#outlier analysis works only on numerical variables
+for (i in 1:length(num_col)){
+  assign(paste0("gn",i),
+         ggplot(aes_string(y = (num_col[i]), x = 'Churn'),data = train) +
+           stat_boxplot(geom = "errorbar", width = 0.5) +
+           geom_boxplot(outlier.colour="red", fill = "skyblue",
+                        outlier.shape=18,outlier.size=3, notch=FALSE) +
+           labs(y=num_col[i],x="Churn"))
+}
+# Plotting plots together
+gridExtra::grid.arrange(gn1,gn2,gn3,ncol=3)
+gridExtra::grid.arrange(gn4,gn5,gn6,ncol=3)
+gridExtra::grid.arrange(gn7,gn8,gn9,ncol=3)
+gridExtra::grid.arrange(gn10,gn11,gn12,ncol=3)
+gridExtra::grid.arrange(gn13,gn14,gn15,ncol=3)
 
-# #Making a copy of training dataframe
-# df=train
-# train=df
-# #dim(new_set)                                                 #rows : 1000 & col : 14
-# #dim(df)                                                      #rows : 1000 & col : 14
-
-
-
-
-# # Removing oulier by replacing with NA and then impute
-# for(i in num_col){
-#   print(i)
-#   out = train[,i][train[,i] %in% boxplot.stats(train[,i])$out]
-#   print(length(out))
-#   train[,i][train[,i] %in% out] = NA
-# }
-# 
-# sum(is.na(train))
-# 
-# # Imputing missing values using KNN method
-# train = knnImputation(train, k=)
-# sum(is.na(train_knn))
+# There are outliers present in the data. But if we understand and think about the business model here, we get that the dataset is related to customer usage pattern. 
+# therefore we come to conclusion that to leave the dataset with outliers to get the most out of the dataset and predict our target variable ‘Churn’.
 
 ####### Feature Selection ######
 # Let's look at the correlation plot for only continuous data
@@ -174,37 +148,47 @@ cat_col = names(cat_data)
 library(car)
 dev.off()
 par(mfrow=c(1,2))
+
 qqPlot(train$number.vmail.messages)                             # qqPlot, it has a x values derived from gaussian distribution, if data is distributed normally then the sorted data points should lie very close to the solid reference line 
 truehist(train$number.vmail.messages)                           # truehist() scales the counts to give an estimate of the probability density.
 lines(density(train$number.vmail.messages))  # left skewed      # lines() and density() functions to overlay a density plot on histogram
+
 qqPlot(train$total.day.calls)
 truehist(train$total.day.calls)              
 lines(density(train$total.day.calls))        # normal
+
 qqPlot(train$total.day.charge)
 truehist(train$total.day.charge)
 lines(density(train$total.day.charge))       # normal
+
 qqPlot(train$total.eve.calls)
 truehist(train$total.eve.calls)
 lines(density(train$total.eve.calls))        # normal
+
 qqPlot(train$total.eve.charge)
 truehist(train$total.eve.charge)
 lines(density(train$total.eve.charge))       # normal
+
 qqPlot(train$total.night.calls)
 truehist(train$total.night.calls)
 lines(density(train$total.night.calls))      # normal
+
 qqPlot(train$total.night.charge)
 truehist(train$total.night.charge)
 lines(density(train$total.night.charge))     # normal
+
 qqPlot(train$total.intl.charge)
 truehist(train$total.intl.charge)
 lines(density(train$total.intl.charge))      # almost normal   
+
 qqPlot(train$total.intl.calls)
 truehist(train$total.intl.calls)
 lines(density(train$total.intl.calls))       # left skewed
+
 qqPlot(train$number.customer.service.calls)
 truehist(train$number.customer.service.calls)
 lines(density(train$number.customer.service.calls))# exibits multimodal distribution
-# After ploting all the graphs we can say that most of the variables are normally distributed
+# After plotting all the graphs we can say that most of the variables are normally distributed
 # therefore, we will go for standardization over normalization as our most of the data is distributed normally
 # Standardization
 for(i in num_col){
@@ -278,15 +262,10 @@ smote_output = SMOTE(X =train[ , -c(1, 2, 13)], target = train$Churn, K = 5, dup
 train_smote <- smote_output$data
 str(train_smote)
 names(train_smote)[11]<- "Churn" 
+train_smote$Churn = as.factor(train_smote$Churn)
+table(train_smote$Churn)
 prop.table(table(train_smote$Churn))                                   # now True cases is 0.397% and False is 0.602% 
 
-# ggplot(train, aes(x = number.vmail.messages, y = total.day.calls, color = train$Chrun)) +
-#   geom_point() +
-#   scale_color_manual(values = c('dodgerblue2', 'red'))
-# 
-# ggplot(train_smote, aes(x = number.vmail.messages, y = total.day.calls, color = train_smote$Churn)) +
-#   geom_point() +
-#   scale_color_manual(values = c('dodgerblue2', 'red'))
 # Model development #
 #function for calculating error metrics
 error_metric = function(cm){
@@ -305,10 +284,8 @@ error_metric = function(cm){
 
 #Develop Model on training data of sampled train
 C50_model = C5.0(Churn ~., train, trials = 100, rules = TRUE)
-
 # Lets predict for test cases
-C50_Predictions = predict(C50_model, test[,-14], type = "class")
-
+C50_Predictions = predict(C50_model, test[,-13], type = "class")
 ##Evaluate the performance of classification model
 ConfMatrix_C50 = table(actual = test$Churn,predictions = C50_Predictions)
 # Because our problem statement in more focused to Churn reduction, we are interested in knowing the customers who are going too churn out
@@ -321,81 +298,77 @@ error_metric(ConfMatrix_C50)
 # though we can see here accuracy and fnr is good, we know that our model is trained on unbalanced dataset,
 # and here accuracy is misleading because our model is predicting the majority class.
 # as classifier tend to favour majority class.
-# Therfore, we will see AUC which is better performance metric.
+# Therefore, we will use AUC and ROC which is better performance metric.
 # Area under ROC curve
-library(pROC)
-auc(roc(response = test$Churn,predictor = as.numeric(C50_Predictions)))
-#Area under the curve for sampled train: 0.9924
+roc.curve(test$Churn,C50_Predictions)
+#Area under the curve for sampled train: 0.9811
 
 #Develop Model on training data of under sampled -train_under
 C50_model = C5.0(Churn ~., train_under, trials = 100, rules = TRUE)
 # Lets predict for test cases
-C50_Predictions = predict(C50_model, test[,-14], type = "class")
+C50_Predictions = predict(C50_model, test[,-13], type = "class")
 # Evaluate the performance of classification model
 ConfMatrix_C50 = table(predictions = C50_Predictions, actual = test$Churn)
 confusionMatrix(ConfMatrix_C50,positive = "2") 
 error_metric(ConfMatrix_C50)
 # sensitivity = 1, accuracy = 0.9727, FNR = 0.1592
-library(pROC)
-auc(roc(response = test$Churn,predictor = as.numeric(C50_Predictions)))
+roc.curve(test$Churn,C50_Predictions)
 #Area under the curve for train_under: 0.9841
 
 #Develop Model on training data of over sampled -train_over
 C50_model = C5.0(Churn ~., train_over, trials = 100, rules = TRUE)
 # Lets predict for test cases
-C50_Predictions = predict(C50_model, test[,-14], type = "class")
+C50_Predictions = predict(C50_model, test[,-13], type = "class")
 # Evaluate the performance of classification model
 ConfMatrix_C50 = table(predictions = C50_Predictions, actual = test$Churn)
 confusionMatrix(ConfMatrix_C50,positive = "2") 
 error_metric(ConfMatrix_C50)
 # sensitivity = 0.9924, accuracy = 0.9989, FNR =0
-library(pROC)
-auc(roc(response = test$Churn,predictor = as.numeric(C50_Predictions)))
+roc.curve(test$Churn,C50_Predictions)
 #Area under the curve for train_over: 0.9962
 
 #Develop Model on training data of both-over and under sampled-train_both
 C50_model = C5.0(Churn ~., train_both, trials = 100, rules = TRUE)
 # Lets predict for test cases
-C50_Predictions = predict(C50_model, test[,-14], type = "class")
+C50_Predictions = predict(C50_model, test[,-13], type = "class")
 # Evaluate the performance of classification model
 ConfMatrix_C50 = table(predictions = C50_Predictions, actual = test$Churn)
 confusionMatrix(ConfMatrix_C50,positive = "2")
 error_metric(ConfMatrix_C50)
 # sensitivity = 0.9924, accuracy = 0.9912, FNR =0.050
-library(pROC)
-auc(roc(response = test$Churn,predictor = as.numeric(C50_Predictions)))
-#Area under the curve for train_both: 0.9918
+roc.curve(test$Churn,C50_Predictions)
+#Area under the curve for train_both: 0.992
 
 #Develop Model on training data of over sampled synthetic- train_smote
 C50_model = C5.0(Churn ~., train_smote, trials = 100, rules = TRUE)
 # Lets predict for test cases
-C50_Predictions = predict(C50_model, test[,-14], type = "class")
+C50_Predictions = predict(C50_model, test[,-13], type = "class")
 # Evaluate the performance of classification model
 ConfMatrix_C50 = table(predictions = C50_Predictions, actual = test$Churn)
 confusionMatrix(ConfMatrix_C50,positive = "2") 
 error_metric(ConfMatrix_C50)
-# sensitivity = 0.9924, accuracy = 0.9912, FNR =0.050
+# sensitivity = 1, accuracy = 1, FNR =0
 roc.curve(test$Churn,C50_Predictions)
-#Area under the curve for train_smote: 0.992
+#Area under the curve for train_smote: 1
 
 #Logistic Regression on sampled train-train
 logit_model = glm(Churn ~ ., data = train, family = "binomial")
 #predict using logistic regression
 logit_Predictions = predict(logit_model, newdata = test, type = "response")
 # Confusion matrix
-ConfMatrix_LR = table(test$Churn,logit_Predictions>0.5)# 0.7 is selected to correctly classify TRUE cases
+ConfMatrix_LR = table(test$Churn,logit_Predictions>0.5)# can adjust p to correctly classify TRUE cases
 ConfMatrix_LR
 error_metric(ConfMatrix_LR)
-# accuracy = 0.86, sensitivity =  64, FNR =0.780
+# accuracy = 0.8593, sensitivity =  0.5272, FNR =0.7803
 roc.curve(test$Churn,logit_Predictions>0.5)
-#Area under the curve for train: 0.61
+#Area under the curve for train: 0.593
 
 #Logistic Regression on under sampled train-train_under
 logit_model = glm(Churn ~ ., data = train_under, family = "binomial")
 #predict using logistic regression
 logit_Predictions = predict(logit_model, newdata = test, type = "response")
 # Confusion matrix
-ConfMatrix_LR = table(test$Churn,logit_Predictions>0.5)# 0.8 is selected to correctly classify TRUE cases
+ConfMatrix_LR = table(test$Churn,logit_Predictions>0.5)# can adjust p to correctly classify TRUE cases
 ConfMatrix_LR
 error_metric(ConfMatrix_LR)
 # accuracy = 0.7938, sensitivity =  0.3674, FNR =0.4015
@@ -407,10 +380,10 @@ logit_model = glm(Churn ~ ., data = train_over, family = "binomial")
 #predict using logistic regression
 logit_Predictions = predict(logit_model, newdata = test, type = "response")
 # Confusion matrix
-ConfMatrix_LR = table(test$Churn,logit_Predictions>0.5)# 0.9 is selected to correctly classify TRUE cases
+ConfMatrix_LR = table(test$Churn,logit_Predictions>0.5)# can adjust p to correctly classify TRUE cases
 ConfMatrix_LR
 error_metric(ConfMatrix_LR)
-# accuracy = 0.86, sensitivity =  64
+# accuracy = 0.8233, sensitivity =  0.4147, FNR = 0.4469
 roc.curve(test$Churn,logit_Predictions>0.5)
 #Area under the curve for train_over: 0.711
 
@@ -419,29 +392,29 @@ logit_model = glm(Churn ~ ., data = train_both, family = "binomial")
 #predict using logistic regression
 logit_Predictions = predict(logit_model, newdata = test, type = "response")
 # Confusion matrix
-ConfMatrix_LR = table(test$Churn,logit_Predictions>0.5)# 0.7 is selected to correctly classify TRUE cases
+ConfMatrix_LR = table(test$Churn,logit_Predictions>0.5)# can adjust p to correctly classify TRUE cases
 ConfMatrix_LR
 error_metric(ConfMatrix_LR)
-# accuracy = 0.86, sensitivity =  64
+# accuracy = 0.8233, sensitivity =  0.4147, FNR = 0.4469
 roc.curve(test$Churn,logit_Predictions>0.5)
-#Area under the curve for train_both: 0.75
+#Area under the curve for train_both: 0.711
 
 #Logistic Regression on over sampled synthetically train-train_smote
 logit_model = glm(as.factor(Churn) ~ ., data = train_smote, family = "binomial")
 #predict using logistic regression
 logit_Predictions = predict(logit_model, newdata = test, type = "response")
 # Confusion matrix
-ConfMatrix_LR = table(test$Churn,logit_Predictions>0.5)# 0.7 is selected to correctly classify TRUE cases
+ConfMatrix_LR = table(test$Churn,logit_Predictions>0.5)# can adjust p to correctly classify TRUE cases
 ConfMatrix_LR
 error_metric(ConfMatrix_LR)
-# accuracy = 0.86, sensitivity =  64
+# accuracy = 0.7808, sensitivity =  0.3580, FNR = 0.3409
 roc.curve(test$Churn,logit_Predictions>0.5)
-#Area under the curve for train_smote: 0.72
+#Area under the curve for train_smote: 0.730
 
 # Random Forest on sampled train-train
 RF_model = randomForest( Churn~ ., train, importance = TRUE, ntree = 500)
 #Predict test data using random forest model
-RF_Predictions = predict(RF_model, test[,-14])
+RF_Predictions = predict(RF_model, test[,-13])
 ##Evaluate the performance of classification model
 ConfMatrix_RF = table(test$Churn, RF_Predictions)
 confusionMatrix(ConfMatrix_RF,positive = '2')
@@ -453,107 +426,107 @@ roc.curve(test$Churn,RF_Predictions)
 # Random Forest on under sampled train-train_under
 RF_model = randomForest( Churn~ ., train_under, importance = TRUE, ntree = 500)
 #Predict test data using random forest model
-RF_Predictions = predict(RF_model, test[,-14])
+RF_Predictions = predict(RF_model, test[,-13])
 ##Evaluate the performance of classification model
 ConfMatrix_RF = table(test$Churn, RF_Predictions)
 confusionMatrix(ConfMatrix_RF,positive = '2')
 error_metric(ConfMatrix_RF)
-# accuracy = 0.977, sensitivity =  0.86.27, FNR =0
+# accuracy = 0.976, sensitivity =  0.8571, FNR =0
 roc.curve(test$Churn,RF_Predictions)
-#Area under the curve for train_under:0.987 
+#Area under the curve for train_under:0.986
 
 
 # Random Forest on over sampled train-train_over
 RF_model = randomForest( Churn~ ., train_over, importance = TRUE, ntree = 500)
 #Predict test data using random forest model
-RF_Predictions = predict(RF_model, test[,-14])
+RF_Predictions = predict(RF_model, test[,-13])
 ##Evaluate the performance of classification model
 ConfMatrix_RF = table(test$Churn, RF_Predictions)
 confusionMatrix(ConfMatrix_RF,positive = '2')
 error_metric(ConfMatrix_RF)
 # accuracy = 0.9989, sensitivity =  1, FNR =0.0075
 roc.curve(test$Churn,RF_Predictions)
-#Area under the curve for train_over:0.99
+#Area under the curve for train_over:0.996
 
 
 # Random Forest on both over and under sampled train-train_both
 RF_model = randomForest( Churn~ ., train_both, importance = TRUE, ntree = 500)
 #Predict test data using random forest model
-RF_Predictions = predict(RF_model, test[,-14])
+RF_Predictions = predict(RF_model, test[,-13])
 ##Evaluate the performance of classification model
 ConfMatrix_RF = table(test$Churn, RF_Predictions)
 confusionMatrix(ConfMatrix_RF,positive = '2')
 error_metric(ConfMatrix_RF)
-# accuracy = 0.9901, sensitivity =  0.9424, FNR =0.0075
+# accuracy = 0.9890, sensitivity =  0.9357, FNR =0.0075
 roc.curve(test$Churn,RF_Predictions)
-#Area under the curve for train_both:0.991
+#Area under the curve for train_both:0.990
 
 # Random Forest on over sampled synthetically train-train_smote
 RF_model = randomForest( Churn~ ., train_smote, importance = TRUE, ntree = 500)
 #Predict test data using random forest model
-RF_Predictions = predict(RF_model, test[,-14])
+RF_Predictions = predict(RF_model, test[,-13])
 ##Evaluate the performance of classification model
 ConfMatrix_RF = table(test$Churn, RF_Predictions)
 confusionMatrix(ConfMatrix_RF,positive = '2')
 error_metric(ConfMatrix_RF)
-# accuracy = 0.9901, sensitivity =  0.9424, FNR =0.0075
+# accuracy = 1, sensitivity =  1, FNR =0
 roc.curve(test$Churn,RF_Predictions)
-#Area under the curve for train_smote:0.991
+#Area under the curve for train_smote:1
 
 # KNN on sampled train-train
-KNN_Predictions = knn(train[-14], test[-14], train$Churn, k = 7)
+KNN_Predictions = knn(train[-13], test[-13], train$Churn, k = 7)
 #Confusion matrix
 ConfMatrix_KNN = table(test$Churn,KNN_Predictions)
 confusionMatrix(ConfMatrix_KNN,positive = '2')
 error_metric(ConfMatrix_KNN)
-# accuracy = 0.9596, sensitivity =  0.9896,FNR = 0.27
+# accuracy = 0.9116, sensitivity =  0.9473,FNR = 0.5909
 roc.curve(test$Churn,KNN_Predictions)
-#Area under the curve for train_smote:0.863
+#Area under the curve for train_smote:0.703
 
 # KNN on under sampled train-train_under
-KNN_Predictions = knn(train_under[-14], test[-14], train_under$Churn, k = 7)
+KNN_Predictions = knn(train_under[-13], test[-13], train_under$Churn, k = 7)
 #Confusion matrix
 ConfMatrix_KNN = table(test$Churn,KNN_Predictions)
 confusionMatrix(ConfMatrix_KNN,positive = '2')
 error_metric(ConfMatrix_KNN)
-# accuracy = 0.9738, sensitivity =  0.9354,FNR = 0.12
+# accuracy = 0.9193, sensitivity =  0.6883,FNR = 0.1969
 roc.curve(test$Churn,KNN_Predictions)
-#Area under the curve for train_under:0.934
+#Area under the curve for train_under:0.871
 
 # KNN on over sampled train-train_over
-KNN_Predictions = knn(train_over[-14], test[-14], train_over$Churn, k = 7)
+KNN_Predictions = knn(train_over[-13], test[-13], train_over$Churn, k = 7)
 #Confusion matrix
 ConfMatrix_KNN = table(test$Churn,KNN_Predictions)
 confusionMatrix(ConfMatrix_KNN,positive = '2')
 error_metric(ConfMatrix_KNN)
-# accuracy = 0.9694, sensitivity =  0.8513,FNR =0.045
+# accuracy = 0.8865, sensitivity =  0.5752,FNR =0.1893
 roc.curve(test$Churn,KNN_Predictions)
-#Area under the curve for train_over:0.963
+#Area under the curve for train_over:0.855
 
 # KNN on both over and under sampled train-train_both
-KNN_Predictions = knn(train_both[-14], test[-14], train_both$Churn, k = 7)
+KNN_Predictions = knn(train_both[-13], test[-13], train_both$Churn, k = 7)
 #Confusion matrix
 ConfMatrix_KNN = table(test$Churn,KNN_Predictions)
 confusionMatrix(ConfMatrix_KNN,positive = '2')
 error_metric(ConfMatrix_KNN)
-# accuracy = 0.9585, sensitivity =  0.8455,FNR =0.12
+# accuracy = 0.8942, sensitivity =  0.6047,FNR =0.2348
 roc.curve(test$Churn,KNN_Predictions)
-#Area under the curve for train_both:0.922
+#Area under the curve for train_both:0.843
 
 # KNN on over sampled synthetically train-train_smote
-KNN_Predictions = knn(train_smote[-11], test[,-c(1,2,3,14)], train_smote$Churn, k = 7)
+KNN_Predictions = knn(train_smote[-11], test[,-c(1,2,13)], train_smote$Churn, k = 7)
 #Confusion matrix
 ConfMatrix_KNN = table(test$Churn,KNN_Predictions)
 confusionMatrix(ConfMatrix_KNN,positive = '2')
 error_metric(ConfMatrix_KNN)
-# accuracy = 0.9585, sensitivity =  0.8455,FNR =0.12
+# accuracy = 0.8964, sensitivity =  0.5829,FNR =0.015
 roc.curve(test$Churn,KNN_Predictions)
-#Area under the curve for train_smote:0.922
+#Area under the curve for train_smote:0.933
 
 # Naive Bayes on sampled train-train
 NB_model = naiveBayes(Churn ~ ., data = train)
 #predict on test cases 
-NB_Predictions = predict(NB_model, test[-14], type = 'class')
+NB_Predictions = predict(NB_model, test[-13], type = 'class')
 #Confusion matrix
 ConfMatrix_NB = table(test$Churn,NB_Predictions)
 confusionMatrix(ConfMatrix_NB,positive = '2')
@@ -565,7 +538,7 @@ roc.curve(test$Churn,NB_Predictions)
 # Naive Bayes on under sampled train-train_under
 NB_model = naiveBayes(Churn ~ ., data = train_under)
 #predict on test cases #raw
-NB_Predictions = predict(NB_model, test[-14], type = 'class')
+NB_Predictions = predict(NB_model, test[-13], type = 'class')
 #Confusion matrix
 ConfMatrix_NB = table(test$Churn,NB_Predictions)
 confusionMatrix(ConfMatrix_NB,positive = '2')
@@ -577,7 +550,7 @@ roc.curve(test$Churn,NB_Predictions)
 # Naive Bayes on over sampled train-train_over
 NB_model = naiveBayes(Churn ~ ., data = train_over)
 #predict on test cases #raw
-NB_Predictions = predict(NB_model, test[-14], type = 'class')
+NB_Predictions = predict(NB_model, test[-13], type = 'class')
 #Confusion matrix
 ConfMatrix_NB = table(test$Churn,NB_Predictions)
 confusionMatrix(ConfMatrix_NB,positive = '2')
@@ -589,7 +562,7 @@ roc.curve(test$Churn,NB_Predictions)
 # Naive Bayes on both over and under sampled train-train_both
 NB_model = naiveBayes(Churn ~ ., data = train_both)
 #predict on test cases 
-NB_Predictions = predict(NB_model, test[-14], type = 'class')
+NB_Predictions = predict(NB_model, test[-13], type = 'class')
 #Confusion matrix
 ConfMatrix_NB = table(test$Churn,NB_Predictions)
 confusionMatrix(ConfMatrix_NB,positive = '2')
@@ -599,15 +572,13 @@ roc.curve(test$Churn,NB_Predictions)
 #Area under the curve for train_both:0.828
 
 # Naive Bayes on over sampled synthetically train-train_smote
-NB_model = naiveBayes(as.factor(Churn) ~ ., data = train_smote)
+NB_model = naiveBayes(Churn ~ ., data = train_smote)
 #predict on test cases 
-NB_Predictions = predict(NB_model,test[,-c(1,2,3,14)], type = 'class')
+NB_Predictions = predict(NB_model,test[,-c(1,2,13)], type = 'class')
 #Confusion matrix
 ConfMatrix_NB = table(test$Churn,NB_Predictions)
 confusionMatrix(test$Churn,NB_Predictions,positive = '2')
 error_metric(ConfMatrix_NB)
-# accuracy = 0.8680, sensitivity =  0.5284,FNR =0.2272
+# accuracy = 0.8200, sensitivity =  0.4273,FNR =0.2651
 roc.curve(test$Churn,NB_Predictions)
-#Area under the curve for train_smote:0.828
-
-
+#Area under the curve for train_smote:0.785
