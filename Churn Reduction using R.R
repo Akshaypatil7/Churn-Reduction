@@ -23,8 +23,7 @@ head(train,10)
 train$area.code = as.factor(train$area.code)
 # Since, we have to predict the churn score based on usage pattern
 # so features which are not related to usage pattern will be removed from training data
-# like "area code", "phone number" and "state" are not important so we will remove them, we will remove them after chisquare reduction
-#train = subset(train, select = -c(state,area.code,phone.number,account.length))
+# like "area code", "phone number"ans'state'are not important so we will remove them, we will remove them after chi-square reduction
 str(train)
 # Missing Value Analysis
 any(is.na(train))                                               # It returns a FALSE value. So, there's no missing value.
@@ -139,7 +138,7 @@ corrgram(train[,num_col], order = F,
 # now instead of selecting all variables for our modelling, we would select one of each of them 
 # lets select all charges features-total.day.charge, total.eve.charge, total.night.charge, total.intl.charge
 # and drop all minutes features-total.day.minutes, total.eve.minutes, total.night.minutes, total.intl.minutes
-
+# we will drop them after chi-sa=quare analysis
 # Now Chi-square test of independence for Categorical data
 # As chi-square is only for categorical variables so we will select only categorical variables from training data
 cat_index = vapply(train,is.factor,logical(1))  # selecting only numeric(vapply is safer than sapply)
@@ -159,7 +158,7 @@ for (i in 1:5){
 # and account.length
 # Dimensionality Reduction
 train = subset(train,
-               select = -c(account.length,area.code,phone.number,total.day.minutes,total.eve.minutes,total.night.minutes,total.intl.minutes))
+               select = -c(state,account.length,area.code,phone.number,total.day.minutes,total.eve.minutes,total.night.minutes,total.intl.minutes))
 str(train)
 
 # Again select only numeric and only categorical variables separately from our new data
@@ -212,7 +211,8 @@ for(i in num_col){
   print(i)
   train[,i] = (train[,i] - mean(train[,i]))/sd(train[,i])
 }
-summary(train)
+summary(train) # we can see now our data is standarized
+# Z is negative when the raw score is below the mean and Z is positive when above mean.
 
 ############## A check for Target class imbalance problem for categorical Target Variable-Churn ##########
 
@@ -316,7 +316,7 @@ ConfMatrix_C50 = table(actual = test$Churn,predictions = C50_Predictions)
 # so adding a parameter positive to define our positive class and assigning it to 2.
 confusionMatrix(ConfMatrix_C50,positive = "2") 
 error_metric(ConfMatrix_C50)
-# sensitivity = 1, accuracy = 0.9978
+# sensitivity = 1, accuracy = 0.9945, FNR =0.037
 # according to problem statement we want to correctly identify people who will Churn out i.e Sensitivity/Recall/TPR
 # though we can see here accuracy and fnr is good, we know that our model is trained on unbalanced dataset,
 # and here accuracy is misleading because our model is predicting the majority class.
@@ -335,10 +335,10 @@ C50_Predictions = predict(C50_model, test[,-14], type = "class")
 ConfMatrix_C50 = table(predictions = C50_Predictions, actual = test$Churn)
 confusionMatrix(ConfMatrix_C50,positive = "2") 
 error_metric(ConfMatrix_C50)
-# sensitivity = 0.9318, accuracy = 0.95
+# sensitivity = 1, accuracy = 0.9727, FNR = 0.1592
 library(pROC)
 auc(roc(response = test$Churn,predictor = as.numeric(C50_Predictions)))
-#Area under the curve for train_under: 0.9924
+#Area under the curve for train_under: 0.9841
 
 #Develop Model on training data of over sampled -train_over
 C50_model = C5.0(Churn ~., train_over, trials = 100, rules = TRUE)
@@ -348,10 +348,10 @@ C50_Predictions = predict(C50_model, test[,-14], type = "class")
 ConfMatrix_C50 = table(predictions = C50_Predictions, actual = test$Churn)
 confusionMatrix(ConfMatrix_C50,positive = "2") 
 error_metric(ConfMatrix_C50)
-# sensitivity = 0.9848, accuracy = 0.9978
+# sensitivity = 0.9924, accuracy = 0.9989, FNR =0
 library(pROC)
 auc(roc(response = test$Churn,predictor = as.numeric(C50_Predictions)))
-#Area under the curve for train_over: 0.9924
+#Area under the curve for train_over: 0.9962
 
 #Develop Model on training data of both-over and under sampled-train_both
 C50_model = C5.0(Churn ~., train_both, trials = 100, rules = TRUE)
@@ -361,10 +361,10 @@ C50_Predictions = predict(C50_model, test[,-14], type = "class")
 ConfMatrix_C50 = table(predictions = C50_Predictions, actual = test$Churn)
 confusionMatrix(ConfMatrix_C50,positive = "2")
 error_metric(ConfMatrix_C50)
-# sensitivity = 0.9848, accuracy = 0.9902
+# sensitivity = 0.9924, accuracy = 0.9912, FNR =0.050
 library(pROC)
 auc(roc(response = test$Churn,predictor = as.numeric(C50_Predictions)))
-#Area under the curve for train_both: 0.988
+#Area under the curve for train_both: 0.9918
 
 #Develop Model on training data of over sampled synthetic- train_smote
 C50_model = C5.0(Churn ~., train_smote, trials = 100, rules = TRUE)
@@ -374,9 +374,9 @@ C50_Predictions = predict(C50_model, test[,-14], type = "class")
 ConfMatrix_C50 = table(predictions = C50_Predictions, actual = test$Churn)
 confusionMatrix(ConfMatrix_C50,positive = "2") 
 error_metric(ConfMatrix_C50)
-# sensitivity = 0.9848, accuracy = 0.9902
+# sensitivity = 0.9924, accuracy = 0.9912, FNR =0.050
 roc.curve(test$Churn,C50_Predictions)
-#Area under the curve for train_smote: 0.988
+#Area under the curve for train_smote: 0.992
 
 #Logistic Regression on sampled train-train
 logit_model = glm(Churn ~ ., data = train, family = "binomial")
@@ -386,7 +386,7 @@ logit_Predictions = predict(logit_model, newdata = test, type = "response")
 ConfMatrix_LR = table(test$Churn,logit_Predictions>0.5)# 0.7 is selected to correctly classify TRUE cases
 ConfMatrix_LR
 error_metric(ConfMatrix_LR)
-# accuracy = 0.86, sensitivity =  64
+# accuracy = 0.86, sensitivity =  64, FNR =0.780
 roc.curve(test$Churn,logit_Predictions>0.5)
 #Area under the curve for train: 0.61
 
@@ -398,9 +398,9 @@ logit_Predictions = predict(logit_model, newdata = test, type = "response")
 ConfMatrix_LR = table(test$Churn,logit_Predictions>0.5)# 0.8 is selected to correctly classify TRUE cases
 ConfMatrix_LR
 error_metric(ConfMatrix_LR)
-# accuracy = 0.86, sensitivity =  64
+# accuracy = 0.7938, sensitivity =  0.3674, FNR =0.4015
 roc.curve(test$Churn,logit_Predictions>0.5)
-#Area under the curve for train_under: 0.77
+#Area under the curve for train_under: 0.713
 
 #Logistic Regression on over sampled train-train_over
 logit_model = glm(Churn ~ ., data = train_over, family = "binomial")
@@ -412,7 +412,7 @@ ConfMatrix_LR
 error_metric(ConfMatrix_LR)
 # accuracy = 0.86, sensitivity =  64
 roc.curve(test$Churn,logit_Predictions>0.5)
-#Area under the curve for train_over: 0.74
+#Area under the curve for train_over: 0.711
 
 #Logistic Regression on both over and under sampled train-train_both
 logit_model = glm(Churn ~ ., data = train_both, family = "binomial")
@@ -446,7 +446,7 @@ RF_Predictions = predict(RF_model, test[,-14])
 ConfMatrix_RF = table(test$Churn, RF_Predictions)
 confusionMatrix(ConfMatrix_RF,positive = '2')
 error_metric(ConfMatrix_RF)
-# accuracy = 1, sensitivity =  1
+# accuracy = 1, sensitivity =  1,, FNR =0
 roc.curve(test$Churn,RF_Predictions)
 #Area under the curve for train_:1 
 
@@ -458,9 +458,9 @@ RF_Predictions = predict(RF_model, test[,-14])
 ConfMatrix_RF = table(test$Churn, RF_Predictions)
 confusionMatrix(ConfMatrix_RF,positive = '2')
 error_metric(ConfMatrix_RF)
-# accuracy = 0.94, sensitivity =  0.7097
+# accuracy = 0.977, sensitivity =  0.86.27, FNR =0
 roc.curve(test$Churn,RF_Predictions)
-#Area under the curve for train_under:0.965 
+#Area under the curve for train_under:0.987 
 
 
 # Random Forest on over sampled train-train_over
@@ -471,7 +471,7 @@ RF_Predictions = predict(RF_model, test[,-14])
 ConfMatrix_RF = table(test$Churn, RF_Predictions)
 confusionMatrix(ConfMatrix_RF,positive = '2')
 error_metric(ConfMatrix_RF)
-# accuracy = 0.9978, sensitivity =  1
+# accuracy = 0.9989, sensitivity =  1, FNR =0.0075
 roc.curve(test$Churn,RF_Predictions)
 #Area under the curve for train_over:0.99
 
@@ -484,9 +484,9 @@ RF_Predictions = predict(RF_model, test[,-14])
 ConfMatrix_RF = table(test$Churn, RF_Predictions)
 confusionMatrix(ConfMatrix_RF,positive = '2')
 error_metric(ConfMatrix_RF)
-# accuracy = 0.9858, sensitivity =  0.9168
+# accuracy = 0.9901, sensitivity =  0.9424, FNR =0.0075
 roc.curve(test$Churn,RF_Predictions)
-#Area under the curve for train_both:0.989
+#Area under the curve for train_both:0.991
 
 # Random Forest on over sampled synthetically train-train_smote
 RF_model = randomForest( Churn~ ., train_smote, importance = TRUE, ntree = 500)
@@ -496,9 +496,9 @@ RF_Predictions = predict(RF_model, test[,-14])
 ConfMatrix_RF = table(test$Churn, RF_Predictions)
 confusionMatrix(ConfMatrix_RF,positive = '2')
 error_metric(ConfMatrix_RF)
-# accuracy = 0.9858, sensitivity =  0.91
+# accuracy = 0.9901, sensitivity =  0.9424, FNR =0.0075
 roc.curve(test$Churn,RF_Predictions)
-#Area under the curve for train_smote:0.989
+#Area under the curve for train_smote:0.991
 
 # KNN on sampled train-train
 KNN_Predictions = knn(train[-14], test[-14], train$Churn, k = 7)
@@ -506,9 +506,9 @@ KNN_Predictions = knn(train[-14], test[-14], train$Churn, k = 7)
 ConfMatrix_KNN = table(test$Churn,KNN_Predictions)
 confusionMatrix(ConfMatrix_KNN,positive = '2')
 error_metric(ConfMatrix_KNN)
-# accuracy = 0.8844, sensitivity =  0.96,FNR = 0.7954
+# accuracy = 0.9596, sensitivity =  0.9896,FNR = 0.27
 roc.curve(test$Churn,KNN_Predictions)
-#Area under the curve for train_smote:0.602
+#Area under the curve for train_smote:0.863
 
 # KNN on under sampled train-train_under
 KNN_Predictions = knn(train_under[-14], test[-14], train_under$Churn, k = 7)
@@ -516,9 +516,9 @@ KNN_Predictions = knn(train_under[-14], test[-14], train_under$Churn, k = 7)
 ConfMatrix_KNN = table(test$Churn,KNN_Predictions)
 confusionMatrix(ConfMatrix_KNN,positive = '2')
 error_metric(ConfMatrix_KNN)
-# accuracy = 0.8811, sensitivity =  0.5815,FNR = 0.3787
+# accuracy = 0.9738, sensitivity =  0.9354,FNR = 0.12
 roc.curve(test$Churn,KNN_Predictions)
-#Area under the curve for train_under:0.773
+#Area under the curve for train_under:0.934
 
 # KNN on over sampled train-train_over
 KNN_Predictions = knn(train_over[-14], test[-14], train_over$Churn, k = 7)
@@ -526,9 +526,9 @@ KNN_Predictions = knn(train_over[-14], test[-14], train_over$Churn, k = 7)
 ConfMatrix_KNN = table(test$Churn,KNN_Predictions)
 confusionMatrix(ConfMatrix_KNN,positive = '2')
 error_metric(ConfMatrix_KNN)
-# accuracy = 0.8778, sensitivity =  0.5585,FNR =0.2045
+# accuracy = 0.9694, sensitivity =  0.8513,FNR =0.045
 roc.curve(test$Churn,KNN_Predictions)
-#Area under the curve for train_over:0.844
+#Area under the curve for train_over:0.963
 
 # KNN on both over and under sampled train-train_both
 KNN_Predictions = knn(train_both[-14], test[-14], train_both$Churn, k = 7)
@@ -536,9 +536,9 @@ KNN_Predictions = knn(train_both[-14], test[-14], train_both$Churn, k = 7)
 ConfMatrix_KNN = table(test$Churn,KNN_Predictions)
 confusionMatrix(ConfMatrix_KNN,positive = '2')
 error_metric(ConfMatrix_KNN)
-# accuracy = 0.8680, sensitivity =  0.5329,FNR =32.57
+# accuracy = 0.9585, sensitivity =  0.8455,FNR =0.12
 roc.curve(test$Churn,KNN_Predictions)
-#Area under the curve for train_both:0.787
+#Area under the curve for train_both:0.922
 
 # KNN on over sampled synthetically train-train_smote
 KNN_Predictions = knn(train_smote[-11], test[,-c(1,2,3,14)], train_smote$Churn, k = 7)
@@ -546,9 +546,9 @@ KNN_Predictions = knn(train_smote[-11], test[,-c(1,2,3,14)], train_smote$Churn, 
 ConfMatrix_KNN = table(test$Churn,KNN_Predictions)
 confusionMatrix(ConfMatrix_KNN,positive = '2')
 error_metric(ConfMatrix_KNN)
-# accuracy = 0.8854, sensitivity =  0.5594,FNR =0.037
+# accuracy = 0.9585, sensitivity =  0.8455,FNR =0.12
 roc.curve(test$Churn,KNN_Predictions)
-#Area under the curve for train_smote:0.917
+#Area under the curve for train_smote:0.922
 
 # Naive Bayes on sampled train-train
 NB_model = naiveBayes(Churn ~ ., data = train)
@@ -558,9 +558,9 @@ NB_Predictions = predict(NB_model, test[-14], type = 'class')
 ConfMatrix_NB = table(test$Churn,NB_Predictions)
 confusionMatrix(ConfMatrix_NB,positive = '2')
 error_metric(ConfMatrix_NB)
-# accuracy = 0.8789, sensitivity =  0.6363,FNR =0.6287
+# accuracy = 0.8724, sensitivity =  0.6086,FNR =0.6818
 roc.curve(test$Churn,NB_Predictions)
-#Area under the curve for train:0.668
+#Area under the curve for train:0.642
 
 # Naive Bayes on under sampled train-train_under
 NB_model = naiveBayes(Churn ~ ., data = train_under)
@@ -570,9 +570,9 @@ NB_Predictions = predict(NB_model, test[-14], type = 'class')
 ConfMatrix_NB = table(test$Churn,NB_Predictions)
 confusionMatrix(ConfMatrix_NB,positive = '2')
 error_metric(ConfMatrix_NB)
-# accuracy = 0.8451, sensitivity =  0.4764,FNR =0.2348
+# accuracy = 0.8538, sensitivity =  0.4950,FNR =0.2348
 roc.curve(test$Churn,NB_Predictions)
-#Area under the curve for train_under:0.812
+#Area under the curve for train_under:0.817
 
 # Naive Bayes on over sampled train-train_over
 NB_model = naiveBayes(Churn ~ ., data = train_over)
@@ -582,9 +582,9 @@ NB_Predictions = predict(NB_model, test[-14], type = 'class')
 ConfMatrix_NB = table(test$Churn,NB_Predictions)
 confusionMatrix(ConfMatrix_NB,positive = '2')
 error_metric(ConfMatrix_NB)
-# accuracy = 0.8702, sensitivity =  0.5391,FNR =0.2651
+# accuracy = 0.8756, sensitivity =  0.5505,FNR =0.2575
 roc.curve(test$Churn,NB_Predictions)
-#Area under the curve for train_over:0.814
+#Area under the curve for train_over:0.820
 
 # Naive Bayes on both over and under sampled train-train_both
 NB_model = naiveBayes(Churn ~ ., data = train_both)
@@ -594,9 +594,9 @@ NB_Predictions = predict(NB_model, test[-14], type = 'class')
 ConfMatrix_NB = table(test$Churn,NB_Predictions)
 confusionMatrix(ConfMatrix_NB,positive = '2')
 error_metric(ConfMatrix_NB)
-# accuracy = 0.8636, sensitivity =  0.5189,FNR =0.2727
+# accuracy = 0.8680, sensitivity =  0.5284,FNR =0.2272
 roc.curve(test$Churn,NB_Predictions)
-#Area under the curve for train_both:0.807
+#Area under the curve for train_both:0.828
 
 # Naive Bayes on over sampled synthetically train-train_smote
 NB_model = naiveBayes(as.factor(Churn) ~ ., data = train_smote)
@@ -606,8 +606,8 @@ NB_Predictions = predict(NB_model,test[,-c(1,2,3,14)], type = 'class')
 ConfMatrix_NB = table(test$Churn,NB_Predictions)
 confusionMatrix(test$Churn,NB_Predictions,positive = '2')
 error_metric(ConfMatrix_NB)
-# accuracy = 0.82, sensitivity =  0.4266,FNR =0.2727
+# accuracy = 0.8680, sensitivity =  0.5284,FNR =0.2272
 roc.curve(test$Churn,NB_Predictions)
-#Area under the curve for train_smote:0.781
+#Area under the curve for train_smote:0.828
 
 
