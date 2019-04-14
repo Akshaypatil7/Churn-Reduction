@@ -8,6 +8,8 @@
 2. Outlier Analysis.
 3. Missing value Analysis.
 4. Feature Selection.
+ -  Correlation analysis.
+ -  Chi-Square test.
 5. Feature Sacling.
 6. Dealing with Target Class Imbalance in the Dataset.
   - What is imbalance in data.
