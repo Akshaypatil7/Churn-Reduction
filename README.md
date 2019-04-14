@@ -13,7 +13,7 @@
  -  Chi-Square test.
 6. Feature Scaling.
  -  Standaridization.
-7. Dealing with Target Class Imbalance in the Dataset.
+7. Dealing with Target Class Imbalance in the Dataset & Splitting into Train and Test Dataset.
   - What is imbalance in data.
   - What is target class imbalance problem
   - Sampling techniques to overcome imbalance:
