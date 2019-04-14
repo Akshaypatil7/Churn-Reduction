@@ -5,13 +5,15 @@
 ### It is a Classification Problem.
 ## All the steps implemented in this project
 1. Data Pre-processing.
-2. Outlier Analysis.
-3. Missing value Analysis.
-4. Feature Selection.
+2. Data Visualization.
+3. Outlier Analysis.
+4. Missing value Analysis.
+5. Feature Selection.
  -  Correlation analysis.
  -  Chi-Square test.
-5. Feature Sacling.
-6. Dealing with Target Class Imbalance in the Dataset.
+6. Feature Scaling.
+ -  Normalization.
+7. Dealing with Target Class Imbalance in the Dataset.
   - What is imbalance in data.
   - What is target class imbalance problem
   - Sampling techniques to overcome imbalance:
@@ -19,15 +21,15 @@
     - Random Over Sampling.
     - Using Both Under and Over Random sampling.
     - Synthetic Minority Over Sampling Tehnique.
-7. Model Development
+8. Model Development
 - Decision Tree.
 - Random Forest.
 - Logistic Regression.
 - KNN.
 - Naive Bayes.
-8. Model Performance.
-9. Conclusion
-10. R code.
+9. Model Performance.
+10. Conclusion
+11. R code.
 
 -  Note:R code is better coded than python as i was interested in R more than python at that time. 
 -  GitHub folder contains: 
