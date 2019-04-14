@@ -12,7 +12,7 @@
  -  Correlation analysis.
  -  Chi-Square test.
 6. Feature Scaling.
- -  Normalization.
+ -  Standaridization.
 7. Dealing with Target Class Imbalance in the Dataset.
   - What is imbalance in data.
   - What is target class imbalance problem
